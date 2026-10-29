@@ -12,10 +12,30 @@
     -webkit-tap-highlight-color:transparent;
     user-select:none;-webkit-user-select:none;
   }
+
+  /* 核心佈局：上下分層，保證不互相遮擋 */
+  #app {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  /* ================= 中心輪盤區 ================= */
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   #c{display:block;width:100%;height:100%;touch-action:none}
 
+  /* ================= 懸浮 UI 元素 ================= */
   #controls{
-    position:fixed;
+    position:absolute;
     top:calc(14px + env(safe-area-inset-top,0px));
     left:0;right:0;
     display:flex;
@@ -51,13 +71,12 @@
     box-shadow:0 0 16px rgba(212,175,55,0.40);
   }
 
-  /* ================= 賠彩結算看板 ================= */
   #settle-panel {
-    position: fixed;
-    top: calc(66px + env(safe-area-inset-top, 0px)); /* 下移至按鈕下方 */
+    position: absolute;
+    top: calc(66px + env(safe-area-inset-top, 0px));
     left: 50%;
     transform: translateX(-50%);
-    width: 92%;
+    width: 90%;
     max-width: 600px;
     background: rgba(18, 24, 34, 0.88);
     border: 1px solid rgba(212, 175, 55, 0.5);
@@ -130,33 +149,39 @@
     font-family: monospace;
   }
 
-  /* 歷史紀錄區 */
-  #history-bar {
-    position: fixed;
-    top: calc(132px + env(safe-area-inset-top, 0px)); /* 再往下移 */
-    left: 0;
-    right: 0;
-    height: 34px;
+  /* ================= 歷史紀錄區 ================= */
+  #history-container {
+    height: 38px;
+    background: rgba(0,0,0,0.15);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
     display: flex;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  #history-bar {
+    display: flex;
     align-items: center;
     padding: 0 16px;
     gap: 8px;
     overflow-x: auto;
-    pointer-events: auto;
-    z-index: 10;
     scrollbar-width: none;
+    width: 100%;
+    max-width: 900px;
+    justify-content: flex-start;
   }
   #history-bar::-webkit-scrollbar { display: none; }
   
   .history-item {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     color: #fff;
     flex-shrink: 0;
@@ -173,30 +198,31 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  /* ================= 投注區與籌碼 ================= */
+  /* ================= 底部投注區 ================= */
   #betting-area {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #3065a8;
-    padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px)) 6px;
-    box-sizing: border-box;
-    z-index: 20;
+    background: linear-gradient(180deg, #1e3f6e 0%, #15294a 100%);
+    padding: 16px 10px calc(16px + env(safe-area-inset-bottom, 0px)) 10px;
     display: flex;
     justify-content: center;
-    align-items: flex-end;
-    gap: 12px; 
+    position: relative;
+    z-index: 20;
   }
 
   #chip-area {
+    position: absolute;
+    left: clamp(10px, 3vw, 40px);
+    bottom: clamp(10px, 3vh, 30px);
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex-shrink: 0;
-    padding-bottom: 2px;
+    z-index: 30;
     align-items: center;
-    width: clamp(60px, 12vw, 80px);
+    width: clamp(55px, 9vw, 75px);
+    background: rgba(0,0,0,0.3);
+    padding: 10px 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    backdrop-filter: blur(4px);
   }
 
   #btnClearBets {
@@ -206,7 +232,7 @@
     border: 1px solid rgba(239, 68, 68, 0.8);
     color: #fca5a5;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -227,8 +253,8 @@
   }
 
   .chip {
-    width: clamp(26px, 4.5vw, 36px);
-    height: clamp(26px, 4.5vw, 36px);
+    width: clamp(22px, 3.5vw, 32px);
+    height: clamp(22px, 3.5vw, 32px);
     border-radius: 50%;
     box-shadow: 
       0 3px 6px rgba(0,0,0,0.5), 
@@ -261,14 +287,17 @@
   .betting-board {
     position: relative;
     display: grid;
-    grid-template-columns: 1.2fr repeat(12, 1fr) 1.2fr;
+    grid-template-columns: 1.5fr repeat(12, 1fr) 1.5fr;
     grid-template-rows: repeat(2, 0.6fr) repeat(3, 1fr);
     gap: 1.5px;
     background-color: #f5e036;
-    border: 2px solid #f5e036;
+    border: 3px solid #f5e036;
+    border-radius: 8px;
+    overflow: hidden;
     width: 100%;
-    max-width: 600px;
-    aspect-ratio: 2.2 / 1;
+    max-width: 900px;
+    aspect-ratio: 2.4 / 1;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
   }
 
   .cell {
@@ -277,28 +306,31 @@
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: clamp(10px, 2.5vw, 16px);
+    font-size: clamp(14px, 2.2vw, 20px);
     color: #111;
     user-select: none;
+    transition: background-color 0.1s;
   }
-  .cell.red { color: #e32526; }
+  .cell:hover:not(.cell-empty) { background-color: #3a78c5; }
+  
+  .cell.red { color: #ff4747; }
   .cell.black { color: #111; }
   
   .cell-0 {
     grid-column: 1;
     grid-row: 3 / span 3;
-    font-size: clamp(16px, 4vw, 28px);
+    font-size: clamp(24px, 4.5vw, 36px);
     color: #f5e036; 
   }
 
   .cell-2to1 {
     grid-column: 14;
     grid-row: auto;
-    font-size: clamp(8px, 2vw, 12px);
+    font-size: clamp(10px, 1.8vw, 14px);
   }
 
-  .cell-bottom-12 { font-size: clamp(10px, 2.5vw, 16px); }
-  .cell-bottom-half { font-size: clamp(10px, 2.5vw, 16px); }
+  .cell-bottom-12 { font-size: clamp(13px, 2vw, 18px); }
+  .cell-bottom-half { font-size: clamp(13px, 2vw, 18px); }
 
   .diamond-icon {
     display: inline-block;
@@ -308,7 +340,7 @@
     border: 2px solid currentColor;
     pointer-events: none;
   }
-  .diamond-icon.red { border-color: #e32526; }
+  .diamond-icon.red { border-color: #ff4747; }
   .diamond-icon.black { border-color: #111; }
 
   #bet-layer {
@@ -320,12 +352,12 @@
 
   .chip-on-board {
     position: absolute;
-    width: clamp(18px, 3vw, 24px);
-    height: clamp(18px, 3vw, 24px);
+    width: clamp(16px, 2.5vw, 22px);
+    height: clamp(16px, 2.5vw, 22px);
     transform: translate(-50%, -50%);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 3px rgba(255,255,255,0.5), inset 0 -1px 3px rgba(0,0,0,0.4);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.6), inset 0 -1px 3px rgba(0,0,0,0.5);
     border-radius: 50%;
-    border: 1.5px solid rgba(255,255,255,0.85);
+    border: 1.5px solid rgba(255,255,255,0.9);
     pointer-events: auto;
     cursor: grab;
     touch-action: none;
@@ -336,7 +368,7 @@
     position: absolute;
     top: 15%; left: 15%; right: 15%; bottom: 15%;
     border-radius: 50%;
-    border: 1px dashed rgba(255,255,255,0.6);
+    border: 1px dashed rgba(255,255,255,0.7);
     pointer-events: none;
   }
 
@@ -352,37 +384,65 @@
     transform: translate(-50%, -50%) scale(1.1);
     box-shadow: 0 8px 16px rgba(0,0,0,0.6);
   }
+
+  @media (max-width: 768px) {
+    #betting-area { 
+      padding: 10px 4px calc(10px + env(safe-area-inset-bottom, 0px)) 4px; 
+      flex-direction: row;
+      align-items: flex-end;
+    }
+    #chip-area {
+      position: relative;
+      left: 0; bottom: 0;
+      width: clamp(45px, 12vw, 60px);
+      background: transparent;
+      padding: 0;
+      border: none;
+      backdrop-filter: none;
+      margin-right: 6px;
+    }
+    .betting-board {
+      width: calc(100% - 70px);
+      aspect-ratio: 2.0 / 1; 
+    }
+  }
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
+<div id="app">
+  <div id="canvas-container">
+    <canvas id="c"></canvas>
+    
+    <div id="controls">
+      <button id="btnLeft"  class="dir-btn">← 向左轉</button>
+      <button id="btnRight" class="dir-btn active">向右轉 →</button>
+    </div>
 
-<div id="settle-panel">
-  <div class="settle-info">
-    <div class="settle-title" id="settle-title">等待開獎</div>
-    <div class="settle-details" id="settle-details">請下注並打珠</div>
+    <div id="settle-panel">
+      <div class="settle-info">
+        <div class="settle-title" id="settle-title">等待開獎</div>
+        <div class="settle-details" id="settle-details">請下注並打珠</div>
+      </div>
+      <div class="balance-box">
+        <div class="balance-label">本局中獎</div>
+        <div class="balance-value" id="win-value">$ 0</div>
+      </div>
+    </div>
   </div>
-  <div class="balance-box">
-    <div class="balance-label">本局中獎</div>
-    <div class="balance-value" id="win-value">$ 0</div>
+
+  <div id="history-container">
+    <div id="history-bar"></div>
+  </div>
+
+  <div id="betting-area">
+    <div class="betting-board" id="board"></div>
+    <div id="chip-area">
+      <button id="btnClearBets">清空投注</button>
+      <div class="chip-pool" id="chip-pool"></div>
+    </div>
   </div>
 </div>
-
-<div id="controls">
-  <button id="btnLeft"  class="dir-btn">← 向左轉</button>
-  <button id="btnRight" class="dir-btn active">向右轉 →</button>
-</div>
-
-<div id="history-bar"></div>
 <div id="drag-layer"></div>
-
-<div id="betting-area">
-  <div id="chip-area">
-    <button id="btnClearBets">清空投注區</button>
-    <div class="chip-pool" id="chip-pool"></div>
-  </div>
-  <div class="betting-board" id="board"></div>
-</div>
 
 <script>
 (function(){
@@ -509,19 +569,30 @@ const G = {
    ============================================================ */
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
-  W = canvas.clientWidth  || window.innerWidth;
-  H = canvas.clientHeight || window.innerHeight;
+  const container = document.getElementById('canvas-container');
+  W = container.clientWidth;
+  H = container.clientHeight;
 
   canvas.width  = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  cx = W / 2;
-  cy = H * 0.42; // 因頂部 UI 變高，輪盤稍微下移
+  // 取得結算面板底部的位置，避免輪盤被遮擋
+  const settlePanel = document.getElementById('settle-panel');
+  let topOffset = 60;
+  if (settlePanel) {
+    const rect = settlePanel.getBoundingClientRect();
+    topOffset = rect.bottom - container.getBoundingClientRect().top + 20; 
+  }
+  if (topOffset < 100) topOffset = 100; // 預留最小安全距離
 
-  // 稍微縮小輪盤以完美塞入頂部 UI 與底部投注區之間
-  S = Math.min(W * 0.92, H * 0.44) / (D.R_OUT * 2);
-  S = Math.min(S, 1.7);
+  cx = W / 2;
+  // 讓輪盤在「扣除頂部 UI 後的剩餘空間」中垂直置中
+  cy = topOffset + (H - topOffset) * 0.5; 
+
+  // 根據寬度與扣除頂部後的可用高度，計算輪盤最大縮放比
+  S = Math.min(W * 0.9, (H - topOffset) * 0.85) / (D.R_OUT * 2);
+  S = Math.min(S, 1.6);
 }
 
 /* ============================================================
@@ -594,7 +665,7 @@ function buildBettingBoard() {
 }
 
 /* ============================================================
-   拖拽籌碼與座標判定（支援組合注）
+   拖拽籌碼與座標判定
    ============================================================ */
 let dragState = null;
 
@@ -615,13 +686,90 @@ function getBetTypeAt(x, y) {
   
   const W_num = x1 - x0;
   const H_num = y1 - y0;
+  const cw = W_num / 12;
+  const ch = H_num / 3;
   
+  if (x >= x0 - cw * 0.5 && x <= x0 + cw * 0.4) {
+    const relY0 = y - y0;
+    const THRESH_H = Math.min(ch * 0.15, 6);
+
+    if (y >= y0 - ch * 0.4 && y <= y0 + THRESH_H) {
+      return { bet: `corner_0_1_2_3`, name: `角注 (0,1,2,3)` };
+    }
+    if (Math.abs(y - (y0 + ch)) < THRESH_H) {
+      return { bet: `street_0_2_3`, name: `街注 (0,2,3)` };
+    }
+    if (Math.abs(y - (y0 + 2 * ch)) < THRESH_H) {
+      return { bet: `street_0_1_2`, name: `街注 (0,1,2)` };
+    }
+
+    if (relY0 >= THRESH_H && relY0 < ch - THRESH_H) {
+      return { bet: `split_0_3`, name: `分注 (0,3)` };
+    } else if (relY0 >= ch + THRESH_H && relY0 < ch * 2 - THRESH_H) {
+      return { bet: `split_0_2`, name: `分注 (0,2)` };
+    } else if (relY0 >= ch * 2 + THRESH_H && relY0 < ch * 3 - THRESH_H) {
+      return { bet: `split_0_1`, name: `分注 (0,1)` };
+    }
+    
+    return null; 
+  }
+
+  if (x >= x0 && x <= x1 && y < y0 && y > y0 - ch * 0.6) {
+    if (x < x0 + cw * 0.4) return null;
+
+    const col_ = (x - x0) / cw;
+    const colInt_ = Math.round(col_);
+    const distX_ = Math.abs(col_ - colInt_) * cw;
+    const SIXLINE_THRESH = Math.min(cw * 0.2, 6);
+
+    if (distX_ < SIXLINE_THRESH && colInt_ > 0 && colInt_ < 12) {
+      const c = colInt_ - 1;
+      const nums = [
+        c*3+1, c*3+2, c*3+3,
+        (c+1)*3+1, (c+1)*3+2, (c+1)*3+3
+      ];
+      return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
+    }
+
+    let c = Math.round(col_ - 0.5);
+    if (c < 0) c = 0;
+    if (c > 11) c = 11;
+
+    const nums = [c*3+1, c*3+2, c*3+3];
+    return { bet: `street_${nums.join('_')}`, name: `街注 (${nums.join(',')})` };
+  }
+
+  if (x >= x0 && x <= x1 && y > y1 && y < y1 + ch * 0.6) {
+    const col_ = (x - x0) / cw;
+    let c = Math.floor(col_);
+    if (c < 0) c = 0;
+    if (c > 11) c = 11;
+    const nums = [c*3+1, c*3+2, c*3+3];
+    return { bet: `street_${nums.join('_')}`, name: `街注 (${nums.join(',')})` };
+  }
+
   if (x < x0 || x > x1 || y < y0 || y > y1) {
     const c0 = document.querySelector('.cell[data-bet="straight_0"]').getBoundingClientRect();
     if (x >= c0.left && x <= c0.right && y >= c0.top && y <= c0.bottom) {
       return { bet: 'straight_0', name: '直注 (0)' };
     }
-    
+
+    const dozen1 = document.querySelector('.cell[data-bet="dozen_1"]').getBoundingClientRect();
+    if (y >= dozen1.top && y <= dozen1.bottom) {
+      const b1 = x0 + 4 * cw;
+      const b2 = x0 + 8 * cw;
+      const THRESH_LINE = Math.min(cw * 0.2, 6);
+
+      if (Math.abs(x - b1) < THRESH_LINE) {
+        const nums = [4,5,6, 7,8,9];
+        return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
+      }
+      if (Math.abs(x - b2) < THRESH_LINE) {
+        const nums = [16,17,18, 19,20,21];
+        return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
+      }
+    }
+
     const el = document.elementFromPoint(x, y);
     const cell = el ? el.closest('.cell') : null;
     if (cell && cell.dataset.bet && !cell.dataset.bet.startsWith('straight_')) {
@@ -630,50 +778,56 @@ function getBetTypeAt(x, y) {
     return null;
   }
 
-  const cw = W_num / 12;
-  const ch = H_num / 3;
-  
   const relX = x - x0;
   const relY = y - y0;
-  
+
   const col = relX / cw;
   const row = relY / ch;
-  
+
   const colInt = Math.round(col);
   const rowInt = Math.round(row);
-  
+
   const distX = Math.abs(col - colInt) * cw;
   const distY = Math.abs(row - rowInt) * ch;
-  
-  const THRESH = 12;
-  
+
+  const THRESH_X = Math.min(cw * 0.18, 7);
+  const THRESH_Y = Math.min(ch * 0.18, 7);
+  const THRESH_CORNER = Math.min(Math.min(cw, ch) * 0.20, 7);
+
   const getNum = (c, r) => {
     if (c < 0 || c > 11 || r < 0 || r > 2) return null;
     return c * 3 + (3 - r);
   };
-  
-  if (rowInt === 2 && (y - c3.bottom) > -THRESH && (y - c3.bottom) < THRESH) {
-    const c = Math.floor(col);
-    if (c >= 0 && c < 12) {
-      const nums = [getNum(c,0), getNum(c,1), getNum(c,2)];
-      return { bet: `street_${nums.join('_')}`, name: `街注 (${nums.join(',')})` };
-    }
+
+  const cellCol = Math.floor(col);
+  const cellRow = Math.floor(row);
+  const inCellX = relX - cellCol * cw;
+  const inCellY = relY - cellRow * ch;
+  const distToEdgeX = Math.min(inCellX, cw - inCellX);
+  const distToEdgeY = Math.min(inCellY, ch - inCellY);
+
+  const numAtCell = getNum(cellCol, cellRow);
+
+  if (numAtCell !== null 
+      && distToEdgeX > cw * 0.22 
+      && distToEdgeY > ch * 0.22) {
+    return { bet: `straight_${numAtCell}`, name: `直注 (${numAtCell})` };
   }
 
-  if (distX < THRESH && distY < THRESH) {
-    const c = Math.floor(col);
-    const r = Math.floor(row);
+  if (distX < THRESH_CORNER && distY < THRESH_CORNER) {
+    const cR = Math.round(col);
+    const rR = Math.round(row);
     const nums = [
-      getNum(c-1, r-1), getNum(c, r-1),
-      getNum(c-1, r),   getNum(c, r)
+      getNum(cR-1, rR-1), getNum(cR, rR-1),
+      getNum(cR-1, rR),   getNum(cR, rR)
     ].filter(n => n !== null);
     if (nums.length === 4) {
       return { bet: `corner_${nums.join('_')}`, name: `角注 (${nums.join(',')})` };
     }
   }
-  
-  if (distX < THRESH) {
-    const c = Math.floor(col);
+
+  if (distX < THRESH_X) {
+    const c = Math.round(col);
     const r = Math.floor(row);
     const n1 = getNum(c-1, r);
     const n2 = getNum(c, r);
@@ -681,24 +835,21 @@ function getBetTypeAt(x, y) {
       return { bet: `split_${n1}_${n2}`, name: `分注 (${n1},${n2})` };
     }
   }
-  
-  if (distY < THRESH) {
+
+  if (distY < THRESH_Y) {
     const c = Math.floor(col);
-    const r = Math.floor(row);
+    const r = Math.round(row);
     const n1 = getNum(c, r-1);
     const n2 = getNum(c, r);
     if (n1 !== null && n2 !== null) {
       return { bet: `split_${n1}_${n2}`, name: `分注 (${n1},${n2})` };
     }
   }
-  
-  const centerCol = Math.floor(col);
-  const centerRow = Math.floor(row);
-  const num = getNum(centerCol, centerRow);
-  if (num !== null) {
-    return { bet: `straight_${num}`, name: `直注 (${num})` };
+
+  if (numAtCell !== null) {
+    return { bet: `straight_${numAtCell}`, name: `直注 (${numAtCell})` };
   }
-  
+
   return null;
 }
 
@@ -751,7 +902,7 @@ function onDragEnd(e) {
   window.removeEventListener('pointermove', onDragMove);
   window.removeEventListener('pointerup', onDragEnd);
 
-  const { sourceType, colorIndex, ghost, originalChip, moved } = dragState;
+  const { sourceType, colorIndex, ghost, originalChip } = dragState;
   const boardRect = boardContainer.getBoundingClientRect();
   const isInsideBoard = 
     e.clientX >= boardRect.left && e.clientX <= boardRect.right &&
@@ -813,6 +964,10 @@ function getMultiplier(bet, result) {
     const nums = bet.split('_').slice(1).map(Number);
     return nums.includes(result) ? 8 : 0;
   }
+  if (bet.startsWith('sixline_')) {
+    const nums = bet.split('_').slice(1).map(Number);
+    return nums.includes(result) ? 5 : 0;
+  }
   
   if (bet.startsWith('straight_')) {
     const num = parseInt(bet.split('_')[1]);
@@ -863,14 +1018,13 @@ function calculateBets(resultNum, resultColor) {
       const win = CHIP_VALUE * (mult + 1);
       totalWin += win;
       
-      // 中獎籌碼保留，且高亮顯示
       chip.style.boxShadow = `0 0 10px ${colorInfo.hex}, inset 0 1px 3px rgba(255,255,255,0.5)`;
       
       detailsHtml += `<span class="win-tag" style="color:${colorInfo.hex}; border-color:${colorInfo.hex}; background:rgba(255,255,255,0.1);">
         [${colorInfo.name}] ${betName} (1賠${mult}): +$${win}
       </span>`;
     } else {
-      chip.remove(); // 未中獎籌碼移除
+      chip.remove();
     }
   });
 
@@ -886,7 +1040,6 @@ function calculateBets(resultNum, resultColor) {
   }
 }
 
-// 清除盤面按鈕邏輯
 btnClearBets.addEventListener('click', () => {
   document.querySelectorAll('.chip-on-board').forEach(c => c.remove());
   G.lastWin = 0;
@@ -1576,96 +1729,7 @@ function drawBall() {
 }
 
 function drawHUD() {
-  let hint = '';
-  if (G.phase === 'idle') hint = '拖動珠子到左邊或右邊發射點';
-  else if (G.phase === 'drag')  hint = '拖到左/右發射點';
-  else if (G.phase === 'ready') hint = '向下拉動發射';
-  else if (G.phase === 'spin' || G.phase === 'drop' || G.phase === 'settle') hint = '轉動中…';
-
-  const bottomOffset = 160; 
-
-  if (hint) {
-    ctx.save();
-    ctx.font = '500 15px -apple-system,"PingFang HK","Microsoft JhengHei",sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(222,232,248,0.80)';
-    ctx.fillText(hint, cx, H - bottomOffset);
-    ctx.restore();
-  }
-
-  if ((G.phase === 'idle' || G.phase === 'drag' || G.phase === 'ready')) {
-    const ruleText = wheelDir === -1
-      ? '數字區向左轉 · 請拖到右邊下拉'
-      : '數字區向右轉 · 請拖到左邊下拉';
-
-    ctx.save();
-    ctx.font = '500 13px -apple-system,"PingFang HK",sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const tw = ctx.measureText(ruleText).width + 30;
-    const bx = cx - tw / 2;
-    const by = H - bottomOffset + 22;
-    const rr = 13;
-    ctx.beginPath();
-    ctx.moveTo(bx + rr, by);
-    ctx.lineTo(bx + tw - rr, by);
-    ctx.arcTo(bx + tw, by, bx + tw, by + rr, rr);
-    ctx.lineTo(bx + tw, by + 26 - rr);
-    ctx.arcTo(bx + tw, by + 26, bx + tw - rr, by + 26, rr);
-    ctx.lineTo(bx + rr, by + 26);
-    ctx.arcTo(bx, by + 26, bx, by + 26 - rr, rr);
-    ctx.lineTo(bx, by + rr);
-    ctx.arcTo(bx, by, bx + rr, by, rr);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(212,175,55,0.12)';
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(212,175,55,0.32)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(240,224,170,0.90)';
-    ctx.fillText(ruleText, cx, by + 13.5);
-    ctx.restore();
-  }
-
-  if (G.phase === 'ready' && G.slideY > 10) {
-    const p = Math.min(G.slideY / (H * 0.35), 1);
-
-    const bw = Math.min(200, W * 0.56);
-    const bh = 7;
-    const bx = cx - bw / 2;
-    const by = H - bottomOffset - 45;
-
-    ctx.save();
-
-    ctx.fillStyle = 'rgba(255,255,255,0.10)';
-    ctx.fillRect(bx, by, bw, bh);
-
-    const grd = ctx.createLinearGradient(bx, 0, bx + bw, 0);
-    grd.addColorStop(0.00, '#4ade80');
-    grd.addColorStop(0.50, '#fbbf24');
-    grd.addColorStop(1.00, '#ef4444');
-    ctx.fillStyle = grd;
-    ctx.fillRect(bx, by, bw * p, bh);
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
-
-    ctx.font = '500 12px -apple-system,"PingFang HK",sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = 'rgba(255,220,150,0.92)';
-    ctx.fillText(
-      G.readySide === 1 ? '向右下拉 · 順時針' : '向左下拉 · 逆時針',
-      cx, by + bh + 15
-    );
-
-    ctx.restore();
-  }
-
+  // 只保留開獎結果的顯示，移除打珠提示與進度條
   if (G.resultNum !== null && G.phase === 'result') {
     const k = Math.min(G.resultTime / 0.28, 1);
     const ease = 1 - Math.pow(1 - k, 3);
@@ -1682,7 +1746,7 @@ function drawHUD() {
         ctx.fillStyle = '#fbbf24';
         ctx.shadowColor = 'rgba(0,0,0,0.8)';
         ctx.shadowBlur = 8;
-        ctx.fillText('+ $' + G.lastWin, cx, cy - 120);
+        ctx.fillText('+ $' + G.lastWin, cx, cy - 100);
         ctx.restore();
       }
     }
@@ -1906,8 +1970,14 @@ function init() {
   canvas.addEventListener('pointerup',     onUp);
   canvas.addEventListener('pointercancel', onUp);
 
-  window.addEventListener('resize', () => resize());
-  window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+  window.addEventListener('resize', () => {
+    resize();
+  });
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      resize();
+    }, 120);
+  });
 
   lastT = performance.now();
   requestAnimationFrame(loop);
