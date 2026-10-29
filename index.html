@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>輪盤打珠器 · 自由邊界下注與組合注</title>
+<title>輪盤打珠器</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
@@ -30,10 +30,50 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
   }
   #c{display:block;width:100%;height:100%;touch-action:none}
 
-  /* ================= 懸浮的結算面板 (精緻小巧) ================= */
+  /* 按鈕懸浮在輪盤區底部 */
+  #controls-wrapper {
+    position: absolute;
+    bottom: 10px; 
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 20px;
+    pointer-events: none; 
+    z-index: 20;
+  }
+
+  .dir-btn{
+    pointer-events: auto;
+    padding: 6px 14px; 
+    border-radius: 20px;
+    border: 1px solid rgba(212,175,55,0.38);
+    background:rgba(18,24,34,0.80);
+    color:rgba(228,236,248,0.92);
+    font-size: 12px;
+    font-weight:600;
+    font-family:inherit;
+    letter-spacing:0.5px;
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    transition:background .2s,color .2s,box-shadow .2s,border-color .2s,opacity .2s;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    outline:none;
+  }
+  .dir-btn:disabled{opacity:0.32;cursor:default}
+  .dir-btn.active{
+    background:linear-gradient(135deg,rgba(212,175,55,0.95),rgba(178,143,44,0.95));
+    color:#12161e;
+    border-color:rgba(255,238,190,0.95);
+    box-shadow:0 0 12px rgba(212,175,55,0.40);
+  }
+
+  /* ================= 懸浮的結算面板 ================= */
   #settle-panel {
     position: absolute;
     top: calc(12px + env(safe-area-inset-top, 0px));
@@ -112,41 +152,6 @@
     font-family: monospace;
   }
 
-  /* ================= 旋轉按鈕區 (縮減高度給輪盤) ================= */
-  #controls-wrapper {
-    display: flex;
-    justify-content: space-between;
-    padding: 2px 16px; 
-    background: #061f13; 
-    z-index: 10;
-  }
-
-  .dir-btn{
-    padding: 5px 12px; 
-    border-radius: 16px;
-    border: 1px solid rgba(212,175,55,0.38);
-    background:rgba(18,24,34,0.80);
-    color:rgba(228,236,248,0.92);
-    font-size: 12px;
-    font-weight:600;
-    font-family:inherit;
-    letter-spacing:0.5px;
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-    transition:background .2s,color .2s,box-shadow .2s,border-color .2s,opacity .2s;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
-    user-select:none;
-    outline:none;
-  }
-  .dir-btn:disabled{opacity:0.32;cursor:default}
-  .dir-btn.active{
-    background:linear-gradient(135deg,rgba(212,175,55,0.95),rgba(178,143,44,0.95));
-    color:#12161e;
-    border-color:rgba(255,238,190,0.95);
-    box-shadow:0 0 12px rgba(212,175,55,0.40);
-  }
-
   /* ================= 歷史紀錄區 ================= */
   #history-container {
     height: 30px;
@@ -201,31 +206,95 @@
     background: linear-gradient(180deg, #1e3f6e 0%, #15294a 100%);
     padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) 10px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     position: relative;
     z-index: 20;
+    flex-shrink: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none; 
+  }
+  #betting-area::-webkit-scrollbar { display: none; }
+
+  /* 縮放控制按鈕 */
+  .zoom-controls {
+    position: fixed;
+    right: clamp(10px, 2vw, 30px);
+    bottom: clamp(10px, 2vh, 25px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 40;
   }
 
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .zoom-btn:active { background: rgba(255,255,255,0.2); }
+
+  /* 投注盤包裹層 */
+  .board-scroller {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+    transition: width 0.2s ease-out;
+    flex-shrink: 0;
+  }
+
+  /* 懸浮籌碼區 */
   #chip-area {
-    position: absolute;
+    position: fixed;
     left: clamp(10px, 3vw, 30px);
-    bottom: clamp(8px, 2vh, 16px);
+    bottom: clamp(10px, 2vh, 30px);
     display: flex;
     flex-direction: column;
     gap: 4px;
-    z-index: 30;
+    z-index: 100;
     align-items: center;
-    width: clamp(45px, 7vw, 60px);
-    background: rgba(0,0,0,0.3);
+    width: clamp(50px, 8vw, 65px);
+    background: rgba(0,0,0,0.5);
     padding: 6px;
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.1);
-    backdrop-filter: blur(4px);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    touch-action: none;
   }
+
+  #chip-drag-handle {
+    width: 100%;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    color: rgba(255,255,255,0.4);
+    font-size: 14px;
+    letter-spacing: 2px;
+    margin-bottom: 2px;
+  }
+  #chip-drag-handle:active { cursor: grabbing; }
 
   #btnClearBets {
     width: 100%;
-    padding: 3px 0;
+    padding: 4px 0;
     background: rgba(239, 68, 68, 0.2);
     border: 1px solid rgba(239, 68, 68, 0.8);
     color: #fca5a5;
@@ -293,7 +362,6 @@
     border-radius: 6px;
     overflow: hidden;
     width: 100%;
-    max-width: 900px;
     aspect-ratio: 2.4 / 1;
     box-shadow: 0 8px 20px rgba(0,0,0,0.6);
   }
@@ -307,11 +375,17 @@
     font-size: clamp(12px, 2vw, 18px);
     color: #111;
     user-select: none;
-    transition: background-color 0.1s;
+    transition: background-color 0.1s, box-shadow 0.1s;
     text-align: center;
   }
   .cell:hover:not(.cell-empty) { background-color: #3a78c5; }
   
+  .cell.highlight {
+    background-color: rgba(255, 215, 100, 0.6) !important;
+    box-shadow: inset 0 0 12px rgba(255, 255, 255, 0.9);
+    color: #000;
+  }
+
   .cell.red { color: #ff4747; }
   .cell.black { color: #111; }
   
@@ -322,12 +396,15 @@
     color: #f5e036; 
   }
 
-  /* ★ 修改：2 to 1 垂直排列樣式 */
   .cell-2to1 {
     grid-column: 14;
     grid-row: auto;
     font-size: clamp(9px, 1.4vw, 12px);
-    line-height: 1.3; /* 增加行高，讓垂直排列不擁擠 */
+    line-height: 1.2; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   .cell-bottom-12 { font-size: clamp(12px, 1.8vw, 16px); }
@@ -385,28 +462,6 @@
     transform: translate(-50%, -50%) scale(1.1);
     box-shadow: 0 8px 16px rgba(0,0,0,0.6);
   }
-
-  @media (max-width: 768px) {
-    #betting-area { 
-      padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)) 4px; 
-      flex-direction: row;
-      align-items: flex-end;
-    }
-    #chip-area {
-      position: relative;
-      left: 0; bottom: 0;
-      width: clamp(40px, 10vw, 55px);
-      background: transparent;
-      padding: 0;
-      border: none;
-      backdrop-filter: none;
-      margin-right: 4px;
-    }
-    .betting-board {
-      width: calc(100% - 60px);
-      aspect-ratio: 2.0 / 1; 
-    }
-  }
 </style>
 </head>
 <body>
@@ -414,6 +469,11 @@
   <div id="canvas-container">
     <canvas id="c"></canvas>
     
+    <div id="controls-wrapper">
+      <button id="btnLeft"  class="dir-btn">← 向左轉</button>
+      <button id="btnRight" class="dir-btn active">向右轉 →</button>
+    </div>
+
     <div id="settle-panel">
       <div class="settle-info">
         <div class="settle-title" id="settle-title">等待開獎</div>
@@ -426,23 +486,28 @@
     </div>
   </div>
 
-  <div id="controls-wrapper">
-    <button id="btnLeft"  class="dir-btn">← 向左轉</button>
-    <button id="btnRight" class="dir-btn active">向右轉 →</button>
-  </div>
-
   <div id="history-container">
     <div id="history-bar"></div>
   </div>
 
   <div id="betting-area">
-    <div class="betting-board" id="board"></div>
-    <div id="chip-area">
-      <button id="btnClearBets">清空</button>
-      <div class="chip-pool" id="chip-pool"></div>
+    <div class="board-scroller" id="board-scroller">
+      <div class="betting-board" id="board"></div>
     </div>
   </div>
 </div>
+
+<div class="zoom-controls">
+  <div class="zoom-btn" id="btnZoomIn">＋</div>
+  <div class="zoom-btn" id="btnZoomOut">－</div>
+</div>
+
+<div id="chip-area">
+  <div id="chip-drag-handle">⋮⋮</div>
+  <button id="btnClearBets">清空</button>
+  <div class="chip-pool" id="chip-pool"></div>
+</div>
+
 <div id="drag-layer"></div>
 
 <script>
@@ -515,12 +580,16 @@ const btnLeft  = document.getElementById('btnLeft');
 const btnRight = document.getElementById('btnRight');
 const historyBar = document.getElementById('history-bar');
 const boardContainer = document.getElementById('board');
-const chipArea = document.getElementById('chip-pool');
+const boardScroller = document.getElementById('board-scroller');
+const chipArea = document.getElementById('chip-area');
+const chipDragHandle = document.getElementById('chip-drag-handle');
 const dragLayer = document.getElementById('drag-layer');
 const winValueEl = document.getElementById('win-value');
 const settleTitleEl = document.getElementById('settle-title');
 const settleDetailsEl = document.getElementById('settle-details');
 const btnClearBets = document.getElementById('btnClearBets');
+const btnZoomIn = document.getElementById('btnZoomIn');
+const btnZoomOut = document.getElementById('btnZoomOut');
 
 let W = 0, H = 0, cx = 0, cy = 0, S = 1, dpr = 1;
 let staticImg = null;
@@ -530,6 +599,8 @@ let lastT = 0;
 let wheelAngle = 0;
 let wheelSpeed = 0;
 let wheelDir   = 1;
+
+let boardScale = 1.0;
 
 const G = {
   phase: 'idle',
@@ -566,7 +637,7 @@ const G = {
 };
 
 /* ============================================================
-   尺寸與版面
+   尺寸與版面 (完美等比重算)
    ============================================================ */
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -576,6 +647,7 @@ function resize() {
 
   canvas.width  = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
+  // 這裡必須重設 transform，以免 resize 時 scale 被累加
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const settlePanel = document.getElementById('settle-panel');
@@ -589,9 +661,72 @@ function resize() {
   cx = W / 2;
   cy = topOffset + (H - topOffset) * 0.5; 
 
-  // 讓輪盤最大化
+  // 嚴格取寬高最小值，保證必定是正圓
   S = Math.min(W * 0.98, (H - topOffset) * 0.98) / (D.R_OUT * 2);
 }
+
+// 監聽容器變化，即時更新 Canvas 尺寸，防止變形
+const resizeObserver = new ResizeObserver(() => {
+  resize();
+});
+resizeObserver.observe(document.getElementById('canvas-container'));
+
+/* ============================================================
+   投注區縮放控制
+   ============================================================ */
+function applyZoom() {
+  boardScroller.style.width = (boardScale * 100) + '%';
+}
+
+btnZoomIn.addEventListener('click', () => {
+  boardScale = Math.min(2.5, boardScale + 0.1);
+  applyZoom();
+});
+
+btnZoomOut.addEventListener('click', () => {
+  boardScale = Math.max(0.5, boardScale - 0.1);
+  applyZoom();
+});
+
+/* ============================================================
+   籌碼區拖拽控制
+   ============================================================ */
+let isDraggingChips = false;
+let chipStartX, chipStartY, chipInitialLeft, chipInitialTop;
+
+chipDragHandle.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  isDraggingChips = true;
+  chipStartX = e.clientX;
+  chipStartY = e.clientY;
+  
+  const rect = chipArea.getBoundingClientRect();
+  chipInitialLeft = rect.left;
+  chipInitialTop = rect.top;
+  
+  chipArea.style.bottom = 'auto';
+  chipArea.style.left = rect.left + 'px';
+  chipArea.style.top = rect.top + 'px';
+  
+  chipDragHandle.setPointerCapture(e.pointerId);
+});
+
+window.addEventListener('pointermove', (e) => {
+  if (!isDraggingChips) return;
+  
+  const dx = e.clientX - chipStartX;
+  const dy = e.clientY - chipStartY;
+  
+  const newLeft = Math.max(0, Math.min(window.innerWidth - chipArea.offsetWidth, chipInitialLeft + dx));
+  const newTop = Math.max(0, Math.min(window.innerHeight - chipArea.offsetHeight, chipInitialTop + dy));
+  
+  chipArea.style.left = newLeft + 'px';
+  chipArea.style.top = newTop + 'px';
+});
+
+window.addEventListener('pointerup', () => {
+  isDraggingChips = false;
+});
 
 /* ============================================================
    建立投注區 UI
@@ -599,13 +734,15 @@ function resize() {
 function buildBettingBoard() {
   boardContainer.innerHTML = '';
   
-  chipArea.innerHTML = '';
+  const chipPool = document.getElementById('chip-pool');
+  chipPool.innerHTML = '';
+  
   for (let i = 1; i <= 8; i++) {
     const chip = document.createElement('div');
     chip.className = `chip c${i}`;
     chip.dataset.color = i;
     chip.addEventListener('pointerdown', (e) => startDrag(e, 'pool', i, null));
-    chipArea.appendChild(chip);
+    chipPool.appendChild(chip);
   }
 
   const betLayer = document.createElement('div');
@@ -638,7 +775,6 @@ function buildBettingBoard() {
     boardContainer.appendChild(createCell(row3[i], '', col, 5, REDS.has(row3[i]), `straight_${row3[i]}`));
   }
 
-  // ★ 修改：加入 <br> 讓 2 to 1 垂直排列
   for (let r = 3; r <= 5; r++) {
     const colIdx = 6 - r;
     boardContainer.appendChild(createCell('2<br>to<br>1', 'cell-2to1', 14, r, false, `column_${colIdx}`));
@@ -772,7 +908,6 @@ function getBetTypeAt(x, y) {
     const el = document.elementFromPoint(x, y);
     const cell = el ? el.closest('.cell') : null;
     if (cell && cell.dataset.bet && !cell.dataset.bet.startsWith('straight_')) {
-      // ★ 修正：處理垂直排列導致的文字換行問題
       let displayName = cell.innerText.trim();
       if (cell.dataset.bet.startsWith('column_')) {
         displayName = '2 to 1';
@@ -857,6 +992,38 @@ function getBetTypeAt(x, y) {
   return null;
 }
 
+/* ============================================================
+   拖拽懸停高亮邏輯
+   ============================================================ */
+function clearHighlight() {
+  document.querySelectorAll('.cell.highlight').forEach(el => el.classList.remove('highlight'));
+}
+
+function applyHighlight(betStr) {
+  clearHighlight();
+  if (!betStr) return;
+  
+  let cells = [];
+  if (betStr.startsWith('split_') || 
+      betStr.startsWith('street_') || 
+      betStr.startsWith('corner_') || 
+      betStr.startsWith('sixline_')) {
+    const nums = betStr.split('_').slice(1);
+    nums.forEach(n => {
+      const el = document.querySelector(`.cell[data-bet="straight_${n}"]`);
+      if (el) cells.push(el);
+    });
+  } else {
+    const el = document.querySelector(`.cell[data-bet="${betStr}"]`);
+    if (el) cells.push(el);
+  }
+  
+  cells.forEach(el => el.classList.add('highlight'));
+}
+
+/* ============================================================
+   拖拽生命週期
+   ============================================================ */
 function startDrag(e, sourceType, colorIndex, originalChip = null) {
   e.preventDefault();
   
@@ -892,6 +1059,22 @@ function onDragMove(e) {
     dragState.moved = true;
   }
   updateGhostPosition(e.clientX, e.clientY);
+  
+  const boardRect = boardContainer.getBoundingClientRect();
+  const isInsideBoard = 
+    e.clientX >= boardRect.left && e.clientX <= boardRect.right &&
+    e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
+    
+  if (isInsideBoard) {
+    const betInfo = getBetTypeAt(e.clientX, e.clientY);
+    if (betInfo) {
+      applyHighlight(betInfo.bet);
+    } else {
+      clearHighlight();
+    }
+  } else {
+    clearHighlight();
+  }
 }
 
 function updateGhostPosition(x, y) {
@@ -949,6 +1132,7 @@ function onDragEnd(e) {
   }
 
   ghost.remove();
+  clearHighlight();
   dragState = null;
 }
 
