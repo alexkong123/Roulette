@@ -13,7 +13,6 @@
     user-select:none;-webkit-user-select:none;
   }
 
-  /* 核心佈局：上下分層，保證不互相遮擋 */
   #app {
     display: flex;
     flex-direction: column;
@@ -113,17 +112,33 @@
     gap: 4px;
   }
 
+  /* ★ 修改：中獎結果滾動區域 */
   .settle-details {
     font-size: 10px;
     color: #aaa;
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    max-height: 36px;
+    max-height: 65px; /* 增加高度，約顯示 2-3 行 */
     overflow-y: auto;
-    scrollbar-width: none;
+    pointer-events: auto; /* 讓使用者可以在這裡滑動 */
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.3) transparent;
+    padding-right: 4px;
   }
-  .settle-details::-webkit-scrollbar { display: none; }
+
+  /* 顯示細微的滾動條，提示使用者可以滑動 */
+  .settle-details::-webkit-scrollbar {
+    width: 4px;
+  }
+  .settle-details::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .settle-details::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+  }
 
   .win-tag {
     padding: 1px 4px;
@@ -219,8 +234,8 @@
   /* 縮放控制按鈕 */
   .zoom-controls {
     position: fixed;
-    right: clamp(10px, 2vw, 30px);
-    bottom: clamp(10px, 2vh, 25px);
+    right: clamp(10px, 2vw, 20px);
+    bottom: 80px; 
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -228,13 +243,13 @@
   }
 
   .zoom-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: rgba(0,0,0,0.6);
     border: 1px solid rgba(255,255,255,0.2);
     color: #fff;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -257,49 +272,49 @@
     flex-shrink: 0;
   }
 
-  /* 懸浮籌碼區 */
+  /* ================= 懸浮籌碼區 ================= */
   #chip-area {
     position: fixed;
-    left: clamp(10px, 3vw, 30px);
-    bottom: clamp(10px, 2vh, 30px);
+    left: clamp(10px, 2vw, 20px);
+    bottom: clamp(10px, 2vh, 20px);
     display: flex;
     flex-direction: column;
     gap: 4px;
     z-index: 100;
     align-items: center;
-    width: clamp(50px, 8vw, 65px);
-    background: rgba(0,0,0,0.5);
-    padding: 6px;
-    border-radius: 12px;
+    width: clamp(50px, 7vw, 60px);
+    background: rgba(0,0,0,0.6);
+    padding: 6px 4px;
+    border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.15);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     touch-action: none;
   }
 
   #chip-drag-handle {
     width: 100%;
-    height: 16px;
+    height: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: grab;
     color: rgba(255,255,255,0.4);
-    font-size: 14px;
-    letter-spacing: 2px;
-    margin-bottom: 2px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    margin-bottom: 0px;
   }
   #chip-drag-handle:active { cursor: grabbing; }
 
   #btnClearBets {
     width: 100%;
-    padding: 4px 0;
+    padding: 3px 0;
     background: rgba(239, 68, 68, 0.2);
-    border: 1px solid rgba(239, 68, 68, 0.8);
+    border: 1px solid rgba(239, 68, 68, 0.6);
     color: #fca5a5;
     border-radius: 4px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
@@ -320,17 +335,17 @@
   }
 
   .chip {
-    width: clamp(18px, 2.8vw, 26px);
-    height: clamp(18px, 2.8vw, 26px);
+    width: clamp(18px, 2.5vw, 24px);
+    height: clamp(18px, 2.5vw, 24px);
     border-radius: 50%;
     box-shadow: 
-      0 2px 4px rgba(0,0,0,0.5), 
+      0 2px 4px rgba(0,0,0,0.6), 
       inset 0 2px 4px rgba(255,255,255,0.5),
       inset 0 -2px 4px rgba(0,0,0,0.4);
     position: relative;
     border: 1.5px solid rgba(255,255,255,0.85);
-    cursor: grab;
-    transition: transform 0.1s;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
     touch-action: none;
   }
   .chip::after {
@@ -340,6 +355,13 @@
     border-radius: 50%;
     border: 1px dashed rgba(255,255,255,0.6);
     pointer-events: none;
+  }
+
+  .chip.selected {
+    transform: scale(1.15);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.9), inset 0 2px 4px rgba(255,255,255,0.5);
+    border-color: #fff;
+    z-index: 10;
   }
 
   .chip.c1 { background: radial-gradient(circle at 30% 30%, #ff6b6b, #dc2626); }
@@ -430,16 +452,15 @@
 
   .chip-on-board {
     position: absolute;
-    width: clamp(14px, 2.2vw, 20px);
-    height: clamp(14px, 2.2vw, 20px);
     transform: translate(-50%, -50%);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,255,255,0.6), inset 0 -1px 3px rgba(0,0,0,0.5);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.5);
     border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.9);
     pointer-events: auto;
     cursor: grab;
     touch-action: none;
     z-index: 11;
+    transition: width 0.2s, height 0.2s; 
   }
   .chip-on-board::after {
     content: '';
@@ -601,6 +622,7 @@ let wheelSpeed = 0;
 let wheelDir   = 1;
 
 let boardScale = 1.0;
+let activeChipColor = 1; 
 
 const G = {
   phase: 'idle',
@@ -637,7 +659,7 @@ const G = {
 };
 
 /* ============================================================
-   尺寸與版面 (完美等比重算)
+   尺寸與版面
    ============================================================ */
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -647,7 +669,6 @@ function resize() {
 
   canvas.width  = Math.round(W * dpr);
   canvas.height = Math.round(H * dpr);
-  // 這裡必須重設 transform，以免 resize 時 scale 被累加
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   const settlePanel = document.getElementById('settle-panel');
@@ -661,21 +682,29 @@ function resize() {
   cx = W / 2;
   cy = topOffset + (H - topOffset) * 0.5; 
 
-  // 嚴格取寬高最小值，保證必定是正圓
   S = Math.min(W * 0.98, (H - topOffset) * 0.98) / (D.R_OUT * 2);
 }
 
-// 監聽容器變化，即時更新 Canvas 尺寸，防止變形
 const resizeObserver = new ResizeObserver(() => {
   resize();
 });
 resizeObserver.observe(document.getElementById('canvas-container'));
 
 /* ============================================================
-   投注區縮放控制
+   投注區縮放控制 & 籌碼等比縮放
    ============================================================ */
+function updateChipSizes() {
+  const boardRect = boardContainer.getBoundingClientRect();
+  const chipSize = Math.max(12, boardRect.width * 0.022); 
+  document.querySelectorAll('.chip-on-board').forEach(chip => {
+    chip.style.width = chipSize + 'px';
+    chip.style.height = chipSize + 'px';
+  });
+}
+
 function applyZoom() {
   boardScroller.style.width = (boardScale * 100) + '%';
+  setTimeout(updateChipSizes, 200); 
 }
 
 btnZoomIn.addEventListener('click', () => {
@@ -741,9 +770,38 @@ function buildBettingBoard() {
     const chip = document.createElement('div');
     chip.className = `chip c${i}`;
     chip.dataset.color = i;
-    chip.addEventListener('pointerdown', (e) => startDrag(e, 'pool', i, null));
+    
+    chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectChipColor(i);
+    });
+    
+    chip.addEventListener('pointerdown', (e) => {
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let isDrag = false;
+      
+      const onMove = (evt) => {
+        if (Math.hypot(evt.clientX - startX, evt.clientY - startY) > 5) {
+          isDrag = true;
+          window.removeEventListener('pointermove', onMove);
+          startDrag(e, 'pool', i, null);
+        }
+      };
+      
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+      
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+    
     chipPool.appendChild(chip);
   }
+  
+  selectChipColor(1);
 
   const betLayer = document.createElement('div');
   betLayer.id = 'bet-layer';
@@ -799,8 +857,282 @@ function buildBettingBoard() {
   }
 }
 
+function selectChipColor(colorIndex) {
+  activeChipColor = colorIndex;
+  document.querySelectorAll('.chip').forEach(el => el.classList.remove('selected'));
+  const target = document.querySelector(`.chip.c${colorIndex}`);
+  if (target) target.classList.add('selected');
+}
+
 /* ============================================================
-   拖拽籌碼與座標判定
+   ★ 精準固定下注點 (Snap Points) 演算法
+   ============================================================ */
+function generateSnapPoints() {
+  const points = [];
+  
+  const c3 = document.querySelector('.cell[data-bet="straight_3"]').getBoundingClientRect();
+  const c34 = document.querySelector('.cell[data-bet="straight_34"]').getBoundingClientRect();
+  const c0 = document.querySelector('.cell[data-bet="straight_0"]').getBoundingClientRect();
+  
+  const x0 = c3.left;
+  const y0 = c3.top;
+  const x1 = c34.right;
+  const y1 = c34.bottom;
+  
+  const cw = (x1 - x0) / 12;
+  const ch = (y1 - y0) / 3;
+
+  // 1. 數字區 (1-36) 內部與交界
+  for (let col = 0; col < 12; col++) {
+    for (let row = 0; row < 3; row++) {
+      const num = col * 3 + (3 - row);
+      
+      // 直注 (格子中心)
+      points.push({
+        x: x0 + (col + 0.5) * cw,
+        y: y0 + (row + 0.5) * ch,
+        bet: `straight_${num}`,
+        name: `直注 (${num})`
+      });
+
+      // 水平分注 (向右連接線中間)
+      if (col < 11) {
+        const numRight = (col + 1) * 3 + (3 - row);
+        points.push({
+          x: x0 + (col + 1) * cw,
+          y: y0 + (row + 0.5) * ch,
+          bet: `split_${num}_${numRight}`,
+          name: `分注 (${num},${numRight})`
+        });
+      }
+
+      // 垂直分注 (向下連接線中間)
+      if (row < 2) {
+        const numBot = col * 3 + (3 - (row + 1));
+        points.push({
+          x: x0 + (col + 0.5) * cw,
+          y: y0 + (row + 1) * ch,
+          bet: `split_${num}_${numBot}`,
+          name: `分注 (${num},${numBot})`
+        });
+      }
+
+      // 角注 (四格交匯角)
+      if (col < 11 && row < 2) {
+        const numR = (col + 1) * 3 + (3 - row);
+        const numB = col * 3 + (3 - (row + 1));
+        const numRB = (col + 1) * 3 + (3 - (row + 1));
+        points.push({
+          x: x0 + (col + 1) * cw,
+          y: y0 + (row + 1) * ch,
+          bet: `corner_${num}_${numB}_${numR}_${numRB}`,
+          name: `角注 (${num},${numB},${numR},${numRB})`
+        });
+      }
+
+      // 底部街注 (底邊正中間)
+      if (row === 2) {
+        const n1 = col * 3 + 1;
+        points.push({
+          x: x0 + (col + 0.5) * cw,
+          y: y1, // 精準在底邊線上
+          bet: `street_${n1}_${n1+1}_${n1+2}`,
+          name: `街注 (${n1},${n1+1},${n1+2})`
+        });
+      }
+
+      // 頂部街注 (頂邊正中間)
+      if (row === 0) {
+        const n1 = col * 3 + 1;
+        points.push({
+          x: x0 + (col + 0.5) * cw,
+          y: y0, // 精準在頂邊線上
+          bet: `street_${n1}_${n1+1}_${n1+2}`,
+          name: `街注 (${n1},${n1+1},${n1+2})`
+        });
+      }
+
+      // 底部六數注 (兩列底邊交匯角)
+      if (row === 2 && col < 11) {
+        const n1 = col * 3 + 1;
+        const n2 = (col + 1) * 3 + 1;
+        points.push({
+          x: x0 + (col + 1) * cw, // 精準在兩列交界線上
+          y: y1, // 精準在底邊線上
+          bet: `sixline_${n1}_${n1+1}_${n1+2}_${n2}_${n2+1}_${n2+2}`,
+          name: `六數注 (${n1},${n1+1},${n1+2},${n2},${n2+1},${n2+2})`
+        });
+      }
+
+      // 頂部六數注 (兩列頂邊交匯角)
+      if (row === 0 && col < 11) {
+        const n1 = col * 3 + 1;
+        const n2 = (col + 1) * 3 + 1;
+        points.push({
+          x: x0 + (col + 1) * cw, // 精準在兩列交界線上
+          y: y0, // 精準在頂邊線上
+          bet: `sixline_${n1}_${n1+1}_${n1+2}_${n2}_${n2+1}_${n2+2}`,
+          name: `六數注 (${n1},${n1+1},${n1+2},${n2},${n2+1},${n2+2})`
+        });
+      }
+    }
+  }
+
+  // 2. 0 周邊交界點
+  points.push({ x: c0.left + c0.width*0.5, y: c0.top + c0.height*0.5, bet: 'straight_0', name: '直注 (0)' });
+  points.push({ x: x0, y: y0, bet: 'corner_0_1_2_3', name: '角注 (0,1,2,3)' });
+  points.push({ x: x0, y: y0 + ch, bet: 'street_0_2_3', name: '街注 (0,2,3)' });
+  points.push({ x: x0, y: y0 + ch * 2, bet: 'street_0_1_2', name: '街注 (0,1,2)' });
+  points.push({ x: x0, y: y0 + ch * 0.5, bet: 'split_0_3', name: '分注 (0,3)' });
+  points.push({ x: x0, y: y0 + ch * 1.5, bet: 'split_0_2', name: '分注 (0,2)' });
+  points.push({ x: x0, y: y0 + ch * 2.5, bet: 'split_0_1', name: '分注 (0,1)' });
+
+  // 3. 外圍注項 (打注、紅黑、列注等)
+  document.querySelectorAll('.cell[data-bet]').forEach(cell => {
+    const bet = cell.dataset.bet;
+    if (bet && !bet.startsWith('straight_')) {
+      if (bet.startsWith('dozen') || bet === 'low' || bet === 'even' || bet === 'red' || bet === 'black' || bet === 'odd' || bet === 'high' || bet.startsWith('column')) {
+        const r = cell.getBoundingClientRect();
+        let displayName = cell.innerText.trim();
+        if (bet.startsWith('column')) displayName = '2 to 1';
+        points.push({ 
+          x: r.left + r.width * 0.5, 
+          y: r.top + r.height * 0.5, 
+          bet: bet, 
+          name: displayName 
+        });
+      }
+    }
+  });
+
+  return points;
+}
+
+function getSnapPoint(x, y) {
+  const points = generateSnapPoints();
+  let closest = null;
+  let minDist = Infinity;
+
+  const c3 = document.querySelector('.cell[data-bet="straight_3"]').getBoundingClientRect();
+  const c34 = document.querySelector('.cell[data-bet="straight_34"]').getBoundingClientRect();
+  const cw = (c34.right - c3.left) / 12;
+  const ch = (c34.bottom - c3.top) / 3;
+  
+  // 吸附閾值：設定為格子寬高較大值的一半，保證精準又靈敏
+  const threshold = Math.max(cw, ch) * 0.5;
+
+  for (const p of points) {
+    const dist = Math.hypot(x - p.x, y - p.y);
+    if (dist < minDist) {
+      minDist = dist;
+      closest = p;
+    }
+  }
+
+  if (closest && minDist < threshold) {
+    return closest;
+  }
+  return null;
+}
+
+/* ============================================================
+   點擊下注與長按撤回邏輯
+   ============================================================ */
+let pressTimer = null;
+let pressStartX = 0, pressStartY = 0;
+let isPressing = false;
+let isDragging = false;
+
+boardContainer.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.chip-on-board')) return;
+  
+  pressStartX = e.clientX;
+  pressStartY = e.clientY;
+  isPressing = true;
+  isDragging = false;
+
+  pressTimer = setTimeout(() => {
+    if (isPressing && !isDragging) {
+      isPressing = false;
+      handleLongPress(pressStartX, pressStartY);
+    }
+  }, 2000);
+});
+
+boardContainer.addEventListener('pointermove', (e) => {
+  if (isPressing) {
+    if (Math.hypot(e.clientX - pressStartX, e.clientY - pressStartY) > 8) {
+      isDragging = true;
+      isPressing = false;
+      clearTimeout(pressTimer);
+    }
+  }
+});
+
+boardContainer.addEventListener('pointerup', (e) => {
+  if (isPressing) {
+    isPressing = false;
+    clearTimeout(pressTimer);
+    if (!isDragging) {
+      handleClickBet(e.clientX, e.clientY);
+    }
+  }
+});
+
+boardContainer.addEventListener('pointercancel', (e) => {
+  isPressing = false;
+  isDragging = false;
+  clearTimeout(pressTimer);
+});
+
+function handleClickBet(x, y) {
+  const snap = getSnapPoint(x, y);
+  if (!snap) return; // 沒吸附到就不下注
+
+  const boardRect = boardContainer.getBoundingClientRect();
+  const xPct = ((snap.x - boardRect.left) / boardRect.width) * 100;
+  const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
+
+  const newChip = document.createElement('div');
+  newChip.className = `chip-on-board chip c${activeChipColor}`;
+  newChip.dataset.color = activeChipColor;
+  newChip.dataset.bet = snap.bet;
+  newChip.dataset.betName = snap.name;
+  newChip.style.left = xPct + '%';
+  newChip.style.top = yPct + '%';
+  
+  const chipSize = Math.max(12, boardRect.width * 0.022); 
+  newChip.style.width = chipSize + 'px';
+  newChip.style.height = chipSize + 'px';
+  
+  newChip.addEventListener('pointerdown', (evt) => startDrag(evt, 'board', activeChipColor, newChip));
+  
+  document.getElementById('bet-layer').appendChild(newChip);
+}
+
+function handleLongPress(x, y) {
+  let closestChip = null;
+  let minDist = 25; 
+
+  const chips = document.querySelectorAll('.chip-on-board');
+  chips.forEach(chip => {
+    const rect = chip.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dist = Math.hypot(cx - x, cy - y);
+    if (dist < minDist) {
+      minDist = dist;
+      closestChip = chip;
+    }
+  });
+
+  if (closestChip) {
+    closestChip.remove();
+  }
+}
+
+/* ============================================================
+   拖拽邏輯 (配合 Snap Points)
    ============================================================ */
 let dragState = null;
 
@@ -808,193 +1140,6 @@ function updateWinUI() {
   winValueEl.textContent = '$ ' + G.lastWin;
 }
 
-function getBetTypeAt(x, y) {
-  const boardRect = boardContainer.getBoundingClientRect();
-  
-  const c3 = document.querySelector('.cell[data-bet="straight_3"]').getBoundingClientRect();
-  const c34 = document.querySelector('.cell[data-bet="straight_34"]').getBoundingClientRect();
-  
-  const x0 = c3.left;
-  const y0 = c3.top;
-  const x1 = c34.right;
-  const y1 = c34.bottom;
-  
-  const W_num = x1 - x0;
-  const H_num = y1 - y0;
-  const cw = W_num / 12;
-  const ch = H_num / 3;
-  
-  if (x >= x0 - cw * 0.5 && x <= x0 + cw * 0.4) {
-    const relY0 = y - y0;
-    const THRESH_H = Math.min(ch * 0.15, 6);
-
-    if (y >= y0 - ch * 0.4 && y <= y0 + THRESH_H) {
-      return { bet: `corner_0_1_2_3`, name: `角注 (0,1,2,3)` };
-    }
-    if (Math.abs(y - (y0 + ch)) < THRESH_H) {
-      return { bet: `street_0_2_3`, name: `街注 (0,2,3)` };
-    }
-    if (Math.abs(y - (y0 + 2 * ch)) < THRESH_H) {
-      return { bet: `street_0_1_2`, name: `街注 (0,1,2)` };
-    }
-
-    if (relY0 >= THRESH_H && relY0 < ch - THRESH_H) {
-      return { bet: `split_0_3`, name: `分注 (0,3)` };
-    } else if (relY0 >= ch + THRESH_H && relY0 < ch * 2 - THRESH_H) {
-      return { bet: `split_0_2`, name: `分注 (0,2)` };
-    } else if (relY0 >= ch * 2 + THRESH_H && relY0 < ch * 3 - THRESH_H) {
-      return { bet: `split_0_1`, name: `分注 (0,1)` };
-    }
-    
-    return null; 
-  }
-
-  if (x >= x0 && x <= x1 && y < y0 && y > y0 - ch * 0.6) {
-    if (x < x0 + cw * 0.4) return null;
-
-    const col_ = (x - x0) / cw;
-    const colInt_ = Math.round(col_);
-    const distX_ = Math.abs(col_ - colInt_) * cw;
-    const SIXLINE_THRESH = Math.min(cw * 0.2, 6);
-
-    if (distX_ < SIXLINE_THRESH && colInt_ > 0 && colInt_ < 12) {
-      const c = colInt_ - 1;
-      const nums = [
-        c*3+1, c*3+2, c*3+3,
-        (c+1)*3+1, (c+1)*3+2, (c+1)*3+3
-      ];
-      return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
-    }
-
-    let c = Math.round(col_ - 0.5);
-    if (c < 0) c = 0;
-    if (c > 11) c = 11;
-
-    const nums = [c*3+1, c*3+2, c*3+3];
-    return { bet: `street_${nums.join('_')}`, name: `街注 (${nums.join(',')})` };
-  }
-
-  if (x >= x0 && x <= x1 && y > y1 && y < y1 + ch * 0.6) {
-    const col_ = (x - x0) / cw;
-    let c = Math.floor(col_);
-    if (c < 0) c = 0;
-    if (c > 11) c = 11;
-    const nums = [c*3+1, c*3+2, c*3+3];
-    return { bet: `street_${nums.join('_')}`, name: `街注 (${nums.join(',')})` };
-  }
-
-  if (x < x0 || x > x1 || y < y0 || y > y1) {
-    const c0 = document.querySelector('.cell[data-bet="straight_0"]').getBoundingClientRect();
-    if (x >= c0.left && x <= c0.right && y >= c0.top && y <= c0.bottom) {
-      return { bet: 'straight_0', name: '直注 (0)' };
-    }
-
-    const dozen1 = document.querySelector('.cell[data-bet="dozen_1"]').getBoundingClientRect();
-    if (y >= dozen1.top && y <= dozen1.bottom) {
-      const b1 = x0 + 4 * cw;
-      const b2 = x0 + 8 * cw;
-      const THRESH_LINE = Math.min(cw * 0.2, 6);
-
-      if (Math.abs(x - b1) < THRESH_LINE) {
-        const nums = [4,5,6, 7,8,9];
-        return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
-      }
-      if (Math.abs(x - b2) < THRESH_LINE) {
-        const nums = [16,17,18, 19,20,21];
-        return { bet: `sixline_${nums.join('_')}`, name: `六數注 (${nums.join(',')})` };
-      }
-    }
-
-    const el = document.elementFromPoint(x, y);
-    const cell = el ? el.closest('.cell') : null;
-    if (cell && cell.dataset.bet && !cell.dataset.bet.startsWith('straight_')) {
-      let displayName = cell.innerText.trim();
-      if (cell.dataset.bet.startsWith('column_')) {
-        displayName = '2 to 1';
-      }
-      return { bet: cell.dataset.bet, name: displayName };
-    }
-    return null;
-  }
-
-  const relX = x - x0;
-  const relY = y - y0;
-
-  const col = relX / cw;
-  const row = relY / ch;
-
-  const colInt = Math.round(col);
-  const rowInt = Math.round(row);
-
-  const distX = Math.abs(col - colInt) * cw;
-  const distY = Math.abs(row - rowInt) * ch;
-
-  const THRESH_X = Math.min(cw * 0.18, 7);
-  const THRESH_Y = Math.min(ch * 0.18, 7);
-  const THRESH_CORNER = Math.min(Math.min(cw, ch) * 0.20, 7);
-
-  const getNum = (c, r) => {
-    if (c < 0 || c > 11 || r < 0 || r > 2) return null;
-    return c * 3 + (3 - r);
-  };
-
-  const cellCol = Math.floor(col);
-  const cellRow = Math.floor(row);
-  const inCellX = relX - cellCol * cw;
-  const inCellY = relY - cellRow * ch;
-  const distToEdgeX = Math.min(inCellX, cw - inCellX);
-  const distToEdgeY = Math.min(inCellY, ch - inCellY);
-
-  const numAtCell = getNum(cellCol, cellRow);
-
-  if (numAtCell !== null 
-      && distToEdgeX > cw * 0.22 
-      && distToEdgeY > ch * 0.22) {
-    return { bet: `straight_${numAtCell}`, name: `直注 (${numAtCell})` };
-  }
-
-  if (distX < THRESH_CORNER && distY < THRESH_CORNER) {
-    const cR = Math.round(col);
-    const rR = Math.round(row);
-    const nums = [
-      getNum(cR-1, rR-1), getNum(cR, rR-1),
-      getNum(cR-1, rR),   getNum(cR, rR)
-    ].filter(n => n !== null);
-    if (nums.length === 4) {
-      return { bet: `corner_${nums.join('_')}`, name: `角注 (${nums.join(',')})` };
-    }
-  }
-
-  if (distX < THRESH_X) {
-    const c = Math.round(col);
-    const r = Math.floor(row);
-    const n1 = getNum(c-1, r);
-    const n2 = getNum(c, r);
-    if (n1 !== null && n2 !== null) {
-      return { bet: `split_${n1}_${n2}`, name: `分注 (${n1},${n2})` };
-    }
-  }
-
-  if (distY < THRESH_Y) {
-    const c = Math.floor(col);
-    const r = Math.round(row);
-    const n1 = getNum(c, r-1);
-    const n2 = getNum(c, r);
-    if (n1 !== null && n2 !== null) {
-      return { bet: `split_${n1}_${n2}`, name: `分注 (${n1},${n2})` };
-    }
-  }
-
-  if (numAtCell !== null) {
-    return { bet: `straight_${numAtCell}`, name: `直注 (${numAtCell})` };
-  }
-
-  return null;
-}
-
-/* ============================================================
-   拖拽懸停高亮邏輯
-   ============================================================ */
 function clearHighlight() {
   document.querySelectorAll('.cell.highlight').forEach(el => el.classList.remove('highlight'));
 }
@@ -1021,9 +1166,6 @@ function applyHighlight(betStr) {
   cells.forEach(el => el.classList.add('highlight'));
 }
 
-/* ============================================================
-   拖拽生命週期
-   ============================================================ */
 function startDrag(e, sourceType, colorIndex, originalChip = null) {
   e.preventDefault();
   
@@ -1066,9 +1208,9 @@ function onDragMove(e) {
     e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
     
   if (isInsideBoard) {
-    const betInfo = getBetTypeAt(e.clientX, e.clientY);
-    if (betInfo) {
-      applyHighlight(betInfo.bet);
+    const snap = getSnapPoint(e.clientX, e.clientY);
+    if (snap) {
+      applyHighlight(snap.bet);
     } else {
       clearHighlight();
     }
@@ -1096,38 +1238,42 @@ function onDragEnd(e) {
     e.clientY >= boardRect.top && e.clientY <= boardRect.bottom;
     
   if (isInsideBoard) {
-    const betInfo = getBetTypeAt(e.clientX, e.clientY);
+    const snap = getSnapPoint(e.clientX, e.clientY);
     
-    if (betInfo) {
-      const xPct = ((e.clientX - boardRect.left) / boardRect.width) * 100;
-      const yPct = ((e.clientY - boardRect.top) / boardRect.height) * 100;
+    if (snap) {
+      const xPct = ((snap.x - boardRect.left) / boardRect.width) * 100;
+      const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
       
       if (sourceType === 'board') {
         originalChip.style.left = xPct + '%';
         originalChip.style.top = yPct + '%';
         originalChip.style.display = 'block';
-        originalChip.dataset.bet = betInfo.bet;
-        originalChip.dataset.betName = betInfo.name;
+        originalChip.dataset.bet = snap.bet;
+        originalChip.dataset.betName = snap.name;
       } else {
         const newChip = document.createElement('div');
         newChip.className = `chip-on-board chip c${colorIndex}`;
         newChip.dataset.color = colorIndex;
-        newChip.dataset.bet = betInfo.bet;
-        newChip.dataset.betName = betInfo.name;
+        newChip.dataset.bet = snap.bet;
+        newChip.dataset.betName = snap.name;
         newChip.style.left = xPct + '%';
         newChip.style.top = yPct + '%';
+        
+        const chipSize = Math.max(12, boardRect.width * 0.022);
+        newChip.style.width = chipSize + 'px';
+        newChip.style.height = chipSize + 'px';
         
         newChip.addEventListener('pointerdown', (evt) => startDrag(evt, 'board', colorIndex, newChip));
         document.getElementById('bet-layer').appendChild(newChip);
       }
     } else {
       if (sourceType === 'board') {
-        originalChip.remove();
+        originalChip.remove(); 
       }
     }
   } else {
     if (sourceType === 'board') {
-      originalChip.remove();
+      originalChip.remove(); 
     }
   }
 
@@ -2159,10 +2305,12 @@ function init() {
 
   window.addEventListener('resize', () => {
     resize();
+    updateChipSizes();
   });
   window.addEventListener('orientationchange', () => {
     setTimeout(() => {
       resize();
+      updateChipSizes();
     }, 120);
   });
 
