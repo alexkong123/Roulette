@@ -207,7 +207,8 @@ const G = {
 
   fireWheelDir: 1,
   fireDir: 1,
-  wrongDir: false,
+  
+  invalid: false, // 新增：是否為違規操作
 
   history: [],
 };
@@ -612,8 +613,7 @@ function update(dt) {
     // 檢測障礙物碰撞
     checkObstacleCollision(b, dt);
 
-    // 【新增：金色區擋隔碰撞檢測】
-    // 當珠子進入金色區域（比數字內環小，且大於落點）時
+    // 【金色區擋隔碰撞檢測】
     if (b.r < D.R_NUM_IN && b.r > D.R_LAND + 2) {
       let localTh = b.th - wheelAngle;
       let t = localTh + Math.PI / 2;
@@ -626,12 +626,9 @@ function update(dt) {
       let diff = localTh - centerLocal;
       diff = diff - TAU * Math.round(diff / TAU);
 
-      // 預留珠子的半徑空間（約 0.02 弧度）
       const margin = 0.025;
 
-      // 如果珠子撞到了隔板邊界
       if (Math.abs(diff) > halfStep - margin) {
-        // 把珠子強制推回邊界內
         if (diff > 0) {
           localTh = centerLocal + halfStep - margin;
         } else {
@@ -639,10 +636,7 @@ function update(dt) {
         }
         b.th = localTh + wheelAngle;
 
-        // 反轉角速度（碰到牆壁反彈）
         b.w = -b.w * 0.4;
-        
-        // 撞牆時稍微增加一點向內的掉落感
         b.vr += 10;
       }
     }
@@ -686,12 +680,10 @@ function update(dt) {
 
     G.resultTime += dt;
 
-    if (G.wrongDir && G.resultTime > 0.6) {
-      G.wrongDir = false;
-      showDirectionAlert();
-    }
+    // 如果違規，顯示時間稍微縮短以加快下一次操作
+    const holdTime = G.invalid ? 2.8 : 3.4;
 
-    if (G.resultTime > 3.4) {
+    if (G.resultTime > holdTime) {
       G.phase = 'idle';
       G.trail.length = 0;
       G.lastPos = null;
@@ -750,13 +742,17 @@ function startSettle() {
   G.trail.length = 0;
   G.lastPos = null;
 
-  G.history.push({ num: G.resultNum, color: G.resultColor });
-  if (G.history.length > 20) G.history.shift();
-  updateHistoryUI();
-
-  G.wrongDir = false;
+  // 判斷是否違規
+  G.invalid = false;
   if (G.fireWheelDir !== 0 && G.fireDir !== -G.fireWheelDir) {
-    G.wrongDir = true;
+    G.invalid = true;
+  }
+
+  // 如果沒有違規，才記錄到歷史
+  if (!G.invalid) {
+    G.history.push({ num: G.resultNum, color: G.resultColor });
+    if (G.history.length > 20) G.history.shift();
+    updateHistoryUI();
   }
 }
 
@@ -769,28 +765,6 @@ function updateHistoryUI() {
     historyBar.appendChild(div);
   });
   historyBar.scrollLeft = historyBar.scrollWidth;
-}
-
-function showDirectionAlert() {
-  const num = G.resultNum;
-  if (num === null) return;
-
-  const colName = G.resultColor === 'red' ? '紅色'
-                : G.resultColor === 'black' ? '黑色' : '綠色';
-
-  const wd = G.fireWheelDir;
-  const fd = G.fireDir;
-
-  const needStr = wd === -1 ? '右邊（順時針）' : '左邊（逆時針）';
-  const didStr  = fd === 1  ? '右邊（順時針）' : '左邊（逆時針）';
-  const wheelStr = wd === -1 ? '向左' : '向右';
-
-  alert(
-    '方向錯誤！\n\n' +
-    '數字區' + wheelStr + '轉動時，應從' + needStr + '打珠。\n' +
-    '你打珠的方向：' + didStr + '\n\n' +
-    '結果：' + num + '（' + colName + '）'
-  );
 }
 
 function fire(dir, power) {
@@ -808,6 +782,8 @@ function fire(dir, power) {
   G.phase   = 'spin';
   G.trail.length = 0;
   G.lastPos = null;
+  
+  G.invalid = false; // 重置違規標記
 }
 
 /* ============================================================
@@ -1070,34 +1046,71 @@ function drawHUD() {
     ctx.translate(cx, cy);
     ctx.scale(S * (0.85 + 0.15 * ease), S * (0.85 + 0.15 * ease));
 
-    ctx.beginPath();
-    ctx.arc(0, 0, 76, 0, TAU);
-    if (G.resultColor === 'green') {
-      ctx.fillStyle = 'rgba(22,110,60,0.96)';
-    } else if (G.resultColor === 'red') {
-      ctx.fillStyle = 'rgba(176,44,28,0.96)';
+    if (G.invalid) {
+      // ========== 違規顯示：紅色禁止符號 ==========
+      ctx.beginPath();
+      ctx.arc(0, 0, 76, 0, TAU);
+      ctx.fillStyle = 'rgba(16, 20, 27, 0.95)';
+      ctx.fill();
+
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = 'rgba(230, 196, 110, 0.95)';
+      ctx.beginPath(); ctx.arc(0, 0, 76, 0, TAU); ctx.stroke();
+
+      // 紅色圓圈
+      ctx.beginPath();
+      ctx.arc(0, 0, 55, 0, TAU);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 12;
+      ctx.stroke();
+
+      // 紅色斜線
+      ctx.beginPath();
+      ctx.moveTo(-38, -38);
+      ctx.lineTo(38, 38);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 12;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // 文字「違規操作」
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 26px -apple-system,"PingFang HK",sans-serif';
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText('違規操作', 0, 105);
+      
     } else {
-      ctx.fillStyle = 'rgba(16,20,27,0.96)';
+      // ========== 正常顯示：結果號碼 ==========
+      ctx.beginPath();
+      ctx.arc(0, 0, 76, 0, TAU);
+      if (G.resultColor === 'green') {
+        ctx.fillStyle = 'rgba(22,110,60,0.96)';
+      } else if (G.resultColor === 'red') {
+        ctx.fillStyle = 'rgba(176,44,28,0.96)';
+      } else {
+        ctx.fillStyle = 'rgba(16,20,27,0.96)';
+      }
+      ctx.fill();
+
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = 'rgba(230,196,110,0.95)';
+      ctx.beginPath(); ctx.arc(0, 0, 76, 0, TAU); ctx.stroke();
+
+      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = 'rgba(255,235,180,0.35)';
+      ctx.beginPath(); ctx.arc(0, 0, 66, 0, TAU); ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = '700 66px -apple-system,"Helvetica Neue",Arial,sans-serif';
+
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillText(String(G.resultNum), 2, 5);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(String(G.resultNum), 0, 3);
     }
-    ctx.fill();
-
-    ctx.lineWidth = 3.5;
-    ctx.strokeStyle = 'rgba(230,196,110,0.95)';
-    ctx.beginPath(); ctx.arc(0, 0, 76, 0, TAU); ctx.stroke();
-
-    ctx.lineWidth = 1.4;
-    ctx.strokeStyle = 'rgba(255,235,180,0.35)';
-    ctx.beginPath(); ctx.arc(0, 0, 66, 0, TAU); ctx.stroke();
-
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '700 66px -apple-system,"Helvetica Neue",Arial,sans-serif';
-
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillText(String(G.resultNum), 2, 5);
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(String(G.resultNum), 0, 3);
 
     ctx.restore();
   }
