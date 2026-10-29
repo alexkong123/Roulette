@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>輪盤打珠器</title>
+<title>輪盤打珠器 · 精準固定點下注</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
@@ -112,23 +112,22 @@
     gap: 4px;
   }
 
-  /* ★ 修改：中獎結果滾動區域 */
+  /* 中獎結果滾動區域 */
   .settle-details {
     font-size: 10px;
     color: #aaa;
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    max-height: 65px; /* 增加高度，約顯示 2-3 行 */
+    max-height: 65px; 
     overflow-y: auto;
-    pointer-events: auto; /* 讓使用者可以在這裡滑動 */
+    pointer-events: auto; 
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.3) transparent;
     padding-right: 4px;
   }
 
-  /* 顯示細微的滾動條，提示使用者可以滑動 */
   .settle-details::-webkit-scrollbar {
     width: 4px;
   }
@@ -935,7 +934,7 @@ function generateSnapPoints() {
         const n1 = col * 3 + 1;
         points.push({
           x: x0 + (col + 0.5) * cw,
-          y: y1, // 精準在底邊線上
+          y: y1,
           bet: `street_${n1}_${n1+1}_${n1+2}`,
           name: `街注 (${n1},${n1+1},${n1+2})`
         });
@@ -946,7 +945,7 @@ function generateSnapPoints() {
         const n1 = col * 3 + 1;
         points.push({
           x: x0 + (col + 0.5) * cw,
-          y: y0, // 精準在頂邊線上
+          y: y0,
           bet: `street_${n1}_${n1+1}_${n1+2}`,
           name: `街注 (${n1},${n1+1},${n1+2})`
         });
@@ -957,8 +956,8 @@ function generateSnapPoints() {
         const n1 = col * 3 + 1;
         const n2 = (col + 1) * 3 + 1;
         points.push({
-          x: x0 + (col + 1) * cw, // 精準在兩列交界線上
-          y: y1, // 精準在底邊線上
+          x: x0 + (col + 1) * cw,
+          y: y1,
           bet: `sixline_${n1}_${n1+1}_${n1+2}_${n2}_${n2+1}_${n2+2}`,
           name: `六數注 (${n1},${n1+1},${n1+2},${n2},${n2+1},${n2+2})`
         });
@@ -969,8 +968,8 @@ function generateSnapPoints() {
         const n1 = col * 3 + 1;
         const n2 = (col + 1) * 3 + 1;
         points.push({
-          x: x0 + (col + 1) * cw, // 精準在兩列交界線上
-          y: y0, // 精準在頂邊線上
+          x: x0 + (col + 1) * cw,
+          y: y0,
           bet: `sixline_${n1}_${n1+1}_${n1+2}_${n2}_${n2+1}_${n2+2}`,
           name: `六數注 (${n1},${n1+1},${n1+2},${n2},${n2+1},${n2+2})`
         });
@@ -1018,7 +1017,6 @@ function getSnapPoint(x, y) {
   const cw = (c34.right - c3.left) / 12;
   const ch = (c34.bottom - c3.top) / 3;
   
-  // 吸附閾值：設定為格子寬高較大值的一半，保證精準又靈敏
   const threshold = Math.max(cw, ch) * 0.5;
 
   for (const p of points) {
@@ -1087,7 +1085,7 @@ boardContainer.addEventListener('pointercancel', (e) => {
 
 function handleClickBet(x, y) {
   const snap = getSnapPoint(x, y);
-  if (!snap) return; // 沒吸附到就不下注
+  if (!snap) return;
 
   const boardRect = boardContainer.getBoundingClientRect();
   const xPct = ((snap.x - boardRect.left) / boardRect.width) * 100;
@@ -1349,7 +1347,8 @@ function calculateBets(resultNum, resultColor) {
     const mult = getMultiplier(bet, resultNum);
     
     if (mult > 0) {
-      const win = CHIP_VALUE * (mult + 1);
+      // ★ 修改：派彩只計算純利潤（不含本金）
+      const win = CHIP_VALUE * mult; 
       totalWin += win;
       
       chip.style.boxShadow = `0 0 10px ${colorInfo.hex}, inset 0 1px 3px rgba(255,255,255,0.5)`;
