@@ -807,7 +807,6 @@ function layoutChipsForBet(betStr) {
   
   const boardRect = boardContainer.getBoundingClientRect();
   const chipSize = Math.max(14, boardRect.width * 0.026);
-  // 如果有 2 種以上顏色，稍微向外散開，保證每個顏色的數字都能看清
   const R = N > 1 ? chipSize * 0.35 : 0; 
 
   colors.forEach((colorId, idx) => {
@@ -995,7 +994,7 @@ function selectChipColor(colorIndex) {
 }
 
 /* ============================================================
-   ★ 精準固定下注點 (Snap Points) 演算法 (加入新名稱)
+   ★ 精準固定下注點 (Snap Points) 演算法
    ============================================================ */
 function generateSnapPoints() {
   const points = [];
@@ -1166,7 +1165,7 @@ function getSnapPoint(x, y) {
 }
 
 /* ============================================================
-   ★ 籌碼文字更新輔助函數（確保顯示在最上層）
+   ★ 籌碼文字更新輔助函數
    ============================================================ */
 function updateChipText(chip) {
   const count = parseInt(chip.dataset.count || '1');
@@ -1241,9 +1240,9 @@ function handleClickBet(x, y) {
   const xPct = ((snap.x - boardRect.left) / boardRect.width) * 100;
   const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
 
-  // 檢查是否已經有相同注項、相同顏色的籌碼
+  // 檢查是否已經有相同注項、相同顏色的籌碼（★ 使用 parseInt 確保類型一致）
   const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
-    c => c.dataset.bet === snap.bet && c.dataset.color === activeChipColor
+    c => c.dataset.bet === snap.bet && parseInt(c.dataset.color) === activeChipColor
   );
 
   if (existingChip) {
@@ -1425,8 +1424,9 @@ function onDragEnd(e) {
       const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
       
       if (sourceType === 'board') {
+        // ★ 使用 parseInt 確保類型一致
         const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
-          c => c !== originalChip && c.dataset.bet === snap.bet && c.dataset.color === colorIndex
+          c => c !== originalChip && c.dataset.bet === snap.bet && parseInt(c.dataset.color) === colorIndex
         );
         
         if (existingChip) {
@@ -1446,8 +1446,9 @@ function onDragEnd(e) {
         layoutChipsForBet(snap.bet);
         if (oldBet && oldBet !== snap.bet) layoutChipsForBet(oldBet);
       } else {
+        // ★ 使用 parseInt 確保類型一致
         const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
-          c => c.dataset.bet === snap.bet && c.dataset.color === colorIndex
+          c => c.dataset.bet === snap.bet && parseInt(c.dataset.color) === colorIndex
         );
         
         if (existingChip) {
