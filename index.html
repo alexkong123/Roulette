@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>輪盤模擬器</title>
+<title>輪盤打珠器 · 精準固定點下注</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   html,body{
@@ -259,7 +259,6 @@
     margin: 0 auto;
     transition: width 0.2s ease-out;
     flex-shrink: 0;
-    padding: 6px; /* 給外部雙線留出空間 */
   }
 
   /* ================= 懸浮籌碼區 ================= */
@@ -372,20 +371,6 @@
     width: 100%;
     aspect-ratio: 2.4 / 1;
     box-shadow: none; 
-  }
-
-  /* ★ 外圍雙線效果 */
-  .betting-board::before {
-    content: '';
-    position: absolute;
-    top: -4px;
-    left: -4px;
-    right: -4px;
-    bottom: -4px;
-    border: 1.5px solid #f5e036;
-    border-radius: 8px;
-    pointer-events: none;
-    z-index: 20;
   }
 
   .cell {
@@ -1098,11 +1083,12 @@ function generateSnapPoints() {
     }
   }
 
-  // 0 周邊
+  // 0 周邊 (已補回 0,1,2 交界點)
   points.push({ x: c0.left + c0.width*0.5, y: c0.top + c0.height*0.5, bet: 'straight_0', name: '孤丁 (0)' });
   points.push({ x: x0, y: y0, bet: 'corner_0_1_2_3', name: '角 (0,1,2,3)' });
   points.push({ x: x0, y: y0 + ch, bet: 'street_0_2_3', name: '路 (0,2,3)' });
   points.push({ x: x0, y: y0 + ch * 2, bet: 'street_0_1_2', name: '路 (0,1,2)' });
+  // 最底部的邊界維持取消
   
   points.push({ x: x0, y: y0 + ch * 0.5, bet: 'split_0_3', name: '半邊 (0,3)' });
   points.push({ x: x0, y: y0 + ch * 1.5, bet: 'split_0_2', name: '半邊 (0,2)' });
