@@ -259,6 +259,7 @@
     margin: 0 auto;
     transition: width 0.2s ease-out;
     flex-shrink: 0;
+    padding: 6px; /* 給外部雙線留出空間 */
   }
 
   /* ================= 懸浮籌碼區 ================= */
@@ -373,6 +374,20 @@
     box-shadow: none; 
   }
 
+  /* ★ 外圍雙線效果 */
+  .betting-board::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    border: 1.5px solid #f5e036;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 20;
+  }
+
   .cell {
     background-color: #3065a8;
     box-shadow: 0 0 0 1.5px #f5e036; 
@@ -460,7 +475,7 @@
     pointer-events: none;
   }
 
-  /* ★ 籌碼中央的數字樣式，確保絕對置中且不被遮擋 */
+  /* 籌碼中央的數字樣式，確保絕對置中且不被遮擋 */
   .chip-text {
     position: absolute;
     z-index: 20;
@@ -1058,17 +1073,6 @@ function generateSnapPoints() {
         });
       }
 
-      // 路 (底部)
-      if (row === 2) {
-        const n1 = col * 3 + 1;
-        points.push({
-          x: x0 + (col + 0.5) * cw,
-          y: y1,
-          bet: `street_${n1}_${n1+1}_${n1+2}`,
-          name: `路 (${n1},${n1+1},${n1+2})`
-        });
-      }
-
       // 路 (頂部)
       if (row === 0) {
         const n1 = col * 3 + 1;
@@ -1077,18 +1081,6 @@ function generateSnapPoints() {
           y: y0,
           bet: `street_${n1}_${n1+1}_${n1+2}`,
           name: `路 (${n1},${n1+1},${n1+2})`
-        });
-      }
-
-      // 線 (底部)
-      if (row === 2 && col < 11) {
-        const n1 = col * 3 + 1;
-        const n2 = (col + 1) * 3 + 1;
-        points.push({
-          x: x0 + (col + 1) * cw,
-          y: y1,
-          bet: `sixline_${n1}_${n1+1}_${n1+2}_${n2}_${n2+1}_${n2+2}`,
-          name: `線 (${n1},${n1+1},${n1+2},${n2},${n2+1},${n2+2})`
         });
       }
 
@@ -1106,14 +1098,17 @@ function generateSnapPoints() {
     }
   }
 
+  // 0 周邊
   points.push({ x: c0.left + c0.width*0.5, y: c0.top + c0.height*0.5, bet: 'straight_0', name: '孤丁 (0)' });
   points.push({ x: x0, y: y0, bet: 'corner_0_1_2_3', name: '角 (0,1,2,3)' });
   points.push({ x: x0, y: y0 + ch, bet: 'street_0_2_3', name: '路 (0,2,3)' });
   points.push({ x: x0, y: y0 + ch * 2, bet: 'street_0_1_2', name: '路 (0,1,2)' });
+  
   points.push({ x: x0, y: y0 + ch * 0.5, bet: 'split_0_3', name: '半邊 (0,3)' });
   points.push({ x: x0, y: y0 + ch * 1.5, bet: 'split_0_2', name: '半邊 (0,2)' });
   points.push({ x: x0, y: y0 + ch * 2.5, bet: 'split_0_1', name: '半邊 (0,1)' });
 
+  // 外圍注項
   document.querySelectorAll('.cell[data-bet]').forEach(cell => {
     const bet = cell.dataset.bet;
     if (bet && !bet.startsWith('straight_')) {
@@ -1240,7 +1235,7 @@ function handleClickBet(x, y) {
   const xPct = ((snap.x - boardRect.left) / boardRect.width) * 100;
   const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
 
-  // 檢查是否已經有相同注項、相同顏色的籌碼（★ 使用 parseInt 確保類型一致）
+  // 檢查是否已經有相同注項、相同顏色的籌碼
   const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
     c => c.dataset.bet === snap.bet && parseInt(c.dataset.color) === activeChipColor
   );
@@ -1424,7 +1419,6 @@ function onDragEnd(e) {
       const yPct = ((snap.y - boardRect.top) / boardRect.height) * 100;
       
       if (sourceType === 'board') {
-        // ★ 使用 parseInt 確保類型一致
         const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
           c => c !== originalChip && c.dataset.bet === snap.bet && parseInt(c.dataset.color) === colorIndex
         );
@@ -1446,7 +1440,6 @@ function onDragEnd(e) {
         layoutChipsForBet(snap.bet);
         if (oldBet && oldBet !== snap.bet) layoutChipsForBet(oldBet);
       } else {
-        // ★ 使用 parseInt 確保類型一致
         const existingChip = Array.from(document.querySelectorAll('.chip-on-board')).find(
           c => c.dataset.bet === snap.bet && parseInt(c.dataset.color) === colorIndex
         );
